@@ -62,3 +62,5 @@ def create_app(config_class=Config):
         seed_reference_biological_parameters()
 
     return app
+app = create_app()
+
