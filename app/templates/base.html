@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Mobile Overlay Backdrop -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="app-shell">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="appSidebar">
             <div class="brand">
                 <div class="brand-logo">AP</div>
                 <div>
@@ -43,9 +46,15 @@
         <!-- Main Workspace -->
         <main class="main-content">
             <header class="topbar">
-                <div>
-                    <h2 id="view-title">Executive Farm Dashboard</h2>
-                    <p id="view-subtitle">Real-time livestock analytics, schedules, and performance overview</p>
+                <div class="topbar-left">
+                    <!-- Mobile Hamburger Toggle Button -->
+                    <button class="navbar-toggler d-md-none" type="button" id="sidebarToggle" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon">☰</span>
+                    </button>
+                    <div>
+                        <h2 id="view-title">Executive Farm Dashboard</h2>
+                        <p id="view-subtitle">Real-time livestock analytics, schedules, and performance overview</p>
+                    </div>
                 </div>
                 <div class="topbar-actions">
                     <span id="currency-badge" class="tag-emerald">{{ settings.currency if settings else 'KES' }}</span>
@@ -73,5 +82,25 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleBtn = document.getElementById("sidebarToggle");
+            const sidebar = document.getElementById("appSidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+
+            function toggleSidebar() {
+                sidebar.classList.toggle("mobile-show");
+                if (overlay) overlay.classList.toggle("active");
+            }
+
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener("click", toggleSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener("click", toggleSidebar);
+            }
+        });
+    </script>
 </body>
 </html>
