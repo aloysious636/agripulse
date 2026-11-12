@@ -400,3 +400,47 @@ canvas {
         padding: 10px;
     }
 }
+@media (max-width: 768px) {
+    /* Fix the sidebar off-screen position */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease-in-out;
+    }
+    
+    .sidebar.mobile-show {
+        left: 0;
+    }
+
+    /* Fix main content and prevent horizontal overflow */
+    .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 10px !important;
+    }
+
+    /* Fix scattered cards/metrics grid: Force 2 columns instead of crowding */
+    .stats-grid, .metrics-grid, .card-grid, .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* Clean up topbar alignment */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}

@@ -102,5 +102,36 @@
             }
         });
     </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleBtn = document.getElementById("sidebarToggle");
+        const sidebar = document.getElementById("appSidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        const navButtons = document.querySelectorAll(".nav-btn");
+
+        function toggleSidebar() {
+            sidebar.classList.toggle("mobile-show");
+            if (overlay) overlay.classList.toggle("active");
+        }
+
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener("click", toggleSidebar);
+        }
+
+        if (overlay) {
+            overlay.addEventListener("click", toggleSidebar);
+        }
+
+        // Automatically close sidebar on mobile when a nav button is clicked
+        navButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove("mobile-show");
+                    if (overlay) overlay.classList.remove("active");
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
