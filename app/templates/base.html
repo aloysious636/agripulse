@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriPulse — Smarter Livestock Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">AP</div>
+                <div>
+                    <h1>AgriPulse</h1>
+                    <span>Smarter Livestock Management</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+                <button class="nav-btn" data-view="animals">Animals</button>
+                <button class="nav-btn" data-view="breeding">Breeding & Reproduction</button>
+                <button class="nav-btn" data-view="health">Health & Veterinary</button>
+                <button class="nav-btn" data-view="management">Routine Management</button>
+                <button class="nav-btn" data-view="nutrition">Nutrition & Feeding</button>
+                <button class="nav-btn" data-view="production">Production Records</button>
+                <button class="nav-btn" data-view="growth">Growth & Weight</button>
+                <button class="nav-btn" data-view="calendar">Farm Calendar</button>
+                <button class="nav-btn" data-view="notifications">
+                    Notifications <span id="nav-alert-badge" class="badge-pill">0</span>
+                </button>
+                <button class="nav-btn" data-view="finance">Farm Finance</button>
+                <button class="nav-btn" data-view="reports">Reports & Exports</button>
+                <button class="nav-btn" data-view="settings">Settings & Backup</button>
+            </nav>
+            <div class="sidebar-footer">
+                <small id="sidebar-farm-name">{{ settings.farm_name if settings else 'AgriPulse Desktop' }}</small>
+                <span class="status-dot">Offline Ready</span>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h2 id="view-title">Executive Farm Dashboard</h2>
+                    <p id="view-subtitle">Real-time livestock analytics, schedules, and performance overview</p>
+                </div>
+                <div class="topbar-actions">
+                    <span id="currency-badge" class="tag-emerald">{{ settings.currency if settings else 'KES' }}</span>
+                    <button class="btn btn-outline" onclick="AgriPulse.refreshAll()">Refresh Data</button>
+                </div>
+            </header>
+
+            <div id="toast-container"></div>
+
+            <div class="content-body">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Animal Profile Modal -->
+    <div id="animal-profile-modal" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="profile-modal-title">Animal Profile</h3>
+                <button class="btn-close" onclick="AgriPulse.closeModal('animal-profile-modal')">&times;</button>
+            </div>
+            <div id="profile-modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

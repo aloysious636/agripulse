@@ -1,0 +1,1047 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- MODULE 1: DASHBOARD -->
+<section id="view-dashboard" class="view-section active">
+    <div class="kpi-grid" id="dashboard-kpis"></div>
+
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Livestock Population by Species</h3>
+            </div>
+            <canvas id="chart-species" width="480" height="220"></canvas>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Daily Milk Production Trend (Last 14 Days)</h3>
+            </div>
+            <canvas id="chart-milk-trend" width="480" height="220"></canvas>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Priority Farm Alerts & Management Reminders</h3>
+            </div>
+            <div id="dashboard-alerts-list" class="list-stack"></div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Farm Expenditure by Category</h3>
+            </div>
+            <canvas id="chart-expenses" width="480" height="220"></canvas>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Veterinary & Health Records</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" id="dash-health-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tag ID</th>
+                            <th>Type</th>
+                            <th>Condition / Vaccine</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Financial Transactions</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" id="dash-finance-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 2: ANIMAL MANAGEMENT -->
+<section id="view-animals" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Register New Animal</h3>
+        </div>
+        <form id="form-animal" onsubmit="AgriPulse.submitAnimal(event)" enctype="multipart/form-data">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Ear Tag / ID Number *</label>
+                    <input type="text" name="tag_number" required placeholder="e.g. KE-COW-001">
+                </div>
+                <div class="form-group">
+                    <label>Animal Name</label>
+                    <input type="text" name="name" placeholder="e.g. Malkia">
+                </div>
+                <div class="form-group">
+                    <label>Species *</label>
+                    <select name="species_id" id="animal-species-select" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Breed *</label>
+                    <input type="text" name="breed" required placeholder="e.g. Friesian, Boer, Large White">
+                </div>
+                <div class="form-group">
+                    <label>Sex *</label>
+                    <select name="sex" required>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Castrated">Castrated</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth *</label>
+                    <input type="date" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>Acquisition Date</label>
+                    <input type="date" name="acquisition_date">
+                </div>
+                <div class="form-group">
+                    <label>Acquisition Source</label>
+                    <select name="acquisition_source">
+                        <option value="Born on Farm">Born on Farm</option>
+                        <option value="Purchased">Purchased</option>
+                        <option value="Donated / Grant">Donated / Grant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Production Category *</label>
+                    <select name="production_category" required>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Meat">Meat</option>
+                        <option value="Breeding">Breeding</option>
+                        <option value="Egg Production">Egg Production</option>
+                        <option value="Dual-Purpose">Dual-Purpose</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Birth Weight (kg)</label>
+                    <input type="number" step="0.1" min="0" name="birth_weight" placeholder="0.0">
+                </div>
+                <div class="form-group">
+                    <label>Current Weight (kg)</label>
+                    <input type="number" step="0.1" min="0" name="current_weight" placeholder="0.0">
+                </div>
+                <div class="form-group">
+                    <label>Dam Tag (Mother)</label>
+                    <input type="text" name="dam_tag" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Sire Tag (Father)</label>
+                    <input type="text" name="sire_tag" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Animal Photograph</label>
+                    <input type="file" name="photo" accept="image/*">
+                </div>
+                <div class="form-group span-2">
+                    <label>Additional Notes</label>
+                    <input type="text" name="notes" placeholder="Coat markings, lineage, or special management notes">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save & Register Animal</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header filter-bar">
+            <h3>Livestock Registry & Search</h3>
+            <div class="filter-controls">
+                <input type="text" id="filter-animal-search" placeholder="Search tag, name, or breed..." oninput="AgriPulse.loadAnimals()">
+                <select id="filter-animal-species" onchange="AgriPulse.loadAnimals()">
+                    <option value="">All Species</option>
+                </select>
+                <select id="filter-animal-status" onchange="AgriPulse.loadAnimals()">
+                    <option value="">All Statuses</option>
+                    <option value="Active" selected>Active</option>
+                    <option value="Sold">Sold</option>
+                    <option value="Deceased">Deceased</option>
+                    <option value="Archived">Archived</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="animals-table">
+                <thead>
+                    <tr>
+                        <th>Tag ID</th>
+                        <th>Name</th>
+                        <th>Species</th>
+                        <th>Breed</th>
+                        <th>Sex</th>
+                        <th>Age</th>
+                        <th>Current Weight</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 3: BREEDING AND REPRODUCTION -->
+<section id="view-breeding" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Record Heat Detection, Insemination, or Natural Mating</h3>
+        </div>
+        <form id="form-breeding" onsubmit="AgriPulse.submitBreeding(event)">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Female Animal *</label>
+                    <select name="animal_id" id="breeding-animal-select" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Heat Observation Date</label>
+                    <input type="date" name="heat_date">
+                </div>
+                <div class="form-group">
+                    <label>Service / Mating Date *</label>
+                    <input type="date" name="service_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Service Method</label>
+                    <select name="service_method">
+                        <option value="Artificial Insemination">Artificial Insemination (AI)</option>
+                        <option value="Natural Mating">Natural Mating</option>
+                        <option value="Embryo Transfer">Embryo Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sire Identification / AI Straw Code</label>
+                    <input type="text" name="sire_tag" placeholder="e.g. KAGRC-FR-902">
+                </div>
+                <div class="form-group">
+                    <label>Pregnancy Diagnosis Status</label>
+                    <select name="pregnancy_status">
+                        <option value="Pending">Pending Examination</option>
+                        <option value="Confirmed">Confirmed Pregnant</option>
+                        <option value="Open">Open (Not Pregnant)</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Aborted">Aborted / Miscarried</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Actual Delivery Date (if completed)</label>
+                    <input type="date" name="actual_delivery_date">
+                </div>
+                <div class="form-group">
+                    <label>Number of Live Offspring</label>
+                    <input type="number" name="offspring_count" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Birth Outcome</label>
+                    <input type="text" name="birth_outcome" placeholder="e.g. Live Single, Twins, Litter of 10">
+                </div>
+                <div class="form-group span-3">
+                    <label>Reproductive Notes</label>
+                    <input type="text" name="notes" placeholder="AI technician name, estrus signs, calving ease">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Record & Calculate Species Gestation Dates</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Reproductive Schedule & Gestation Tracker</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="breeding-table">
+                <thead>
+                    <tr>
+                        <th>Animal Tag</th>
+                        <th>Species</th>
+                        <th>Service Date</th>
+                        <th>Method</th>
+                        <th>Expected Next Heat</th>
+                        <th>Pregnancy Check</th>
+                        <th>Expected Delivery</th>
+                        <th>Days Remaining</th>
+                        <th>Status</th>
+                        <th>Quick Update</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 4: HEALTH MANAGEMENT -->
+<section id="view-health" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Record Veterinary Treatment, Vaccination, Deworming, or Examination</h3>
+        </div>
+        <form id="form-health" onsubmit="AgriPulse.submitHealth(event)">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Animal *</label>
+                    <select name="animal_id" id="health-animal-select" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Record Type *</label>
+                    <select name="record_type" id="health-type-input" required>
+                        <option value="Treatment">Clinical Treatment</option>
+                        <option value="Vaccination">Vaccination</option>
+                        <option value="Deworming">Deworming</option>
+                        <option value="Examination">Veterinary Examination</option>
+                        <option value="Mortality">Mortality Record</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Event Date *</label>
+                    <input type="date" name="event_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Disease / Condition / Vaccine *</label>
+                    <input type="text" name="disease_or_condition" id="health-condition-input" required placeholder="e.g. East Coast Fever, FMD Vaccine">
+                </div>
+                <div class="form-group">
+                    <label>Observed Symptoms</label>
+                    <input type="text" name="symptoms" placeholder="e.g. Pyrexia, anorexia, nasal discharge">
+                </div>
+                <div class="form-group">
+                    <label>Veterinary Diagnosis</label>
+                    <input type="text" name="diagnosis" id="health-diagnosis-input" placeholder="Confirmed or tentative clinical diagnosis">
+                </div>
+                <div class="form-group">
+                    <label>Medication / Vaccine Administered</label>
+                    <input type="text" name="medication" id="health-med-input" placeholder="Product name as prescribed">
+                </div>
+                <div class="form-group">
+                    <label>Recorded Dosage & Route</label>
+                    <input type="text" name="dosage" id="health-dosage-input" placeholder="e.g. Eye drop / Drinking water / S/C">
+                </div>
+                <div class="form-group">
+                    <label>Drug Withdrawal Period (Days)</label>
+                    <input type="number" name="withdrawal_days" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Next Scheduled Booster / Follow-up</label>
+                    <input type="date" name="next_due_date" id="health-nextdue-input">
+                </div>
+                <div class="form-group">
+                    <label>Recovery Status</label>
+                    <select name="recovery_status" id="health-status-input">
+                        <option value="Resolved">Resolved / Immunized</option>
+                        <option value="Under Observation">Under Observation</option>
+                        <option value="Chronic">Chronic</option>
+                        <option value="Deceased">Deceased</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Veterinary & Medication Cost</label>
+                    <input type="number" step="0.01" min="0" name="cost" value="0">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Health Record</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- LIVESTOCK VACCINATION PROGRAM CHEAT SHEET ("CLINIC CARD") -->
+    <div class="card">
+        <div class="card-header filter-bar">
+            <div>
+                <h3>Livestock Preventive Vaccination Program ("Clinic Cheat Sheet")</h3>
+                <small style="color:#64748b;">Standard age-based immunization schedule to prevent outbreaks before they happen</small>
+            </div>
+            <div class="filter-controls">
+                <select id="vax-species-filter" onchange="AgriPulse.renderVaccinationGuide()">
+                    <option value="Poultry">Poultry (Layers / Broilers / Kienyeji)</option>
+                    <option value="Cattle">Cattle (Dairy & Beef)</option>
+                    <option value="Goats & Sheep">Goats & Sheep (Shoats)</option>
+                    <option value="Pigs">Pigs (Swine)</option>
+                    <option value="Rabbits">Rabbits</option>
+                </select>
+                <select id="vax-animal-checker" onchange="AgriPulse.renderVaccinationGuide()">
+                    <option value="">-- Check Specific Animal by Age --</option>
+                </select>
+            </div>
+        </div>
+        <div id="vax-animal-banner" style="display:none; margin-bottom:12px; padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; color:#14532d; font-size:13px;"></div>
+        <div class="table-responsive">
+            <table class="data-table" id="vax-guide-table">
+                <thead>
+                    <tr>
+                        <th>Target Age / Stage</th>
+                        <th>Disease Prevented</th>
+                        <th>Vaccine Name</th>
+                        <th>Route / Method</th>
+                        <th>Booster Frequency</th>
+                        <th>Animal Status / Due Date</th>
+                        <th>Quick Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Animal Health & Biosecurity Log</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="health-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Animal Tag</th>
+                        <th>Type</th>
+                        <th>Condition / Vaccine</th>
+                        <th>Medication & Dosage</th>
+                        <th>Withdrawal End</th>
+                        <th>Next Due</th>
+                        <th>Status</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+<!-- MODULE 5: ROUTINE MANAGEMENT -->
+<section id="view-management" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Schedule Routine Livestock Management Activity</h3>
+        </div>
+        <form id="form-task" onsubmit="AgriPulse.submitTask(event)">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Management Activity *</label>
+                    <select name="activity_name" required>
+                        <option value="Hoof Trimming">Hoof Trimming</option>
+                        <option value="Disbudding / Dehorning">Disbudding / Dehorning</option>
+                        <option value="Castration">Castration</option>
+                        <option value="Weaning">Weaning</option>
+                        <option value="Body Condition Scoring">Body Condition Scoring</option>
+                        <option value="Iron Supplementation (Piglets)">Iron Supplementation (Piglets)</option>
+                        <option value="Teeth Clipping">Teeth Clipping</option>
+                        <option value="Identification / Ear Tagging">Identification / Ear Tagging</option>
+                        <option value="Pregnancy Examination">Pregnancy Examination</option>
+                        <option value="Vaccination Schedule">Vaccination Schedule</option>
+                        <option value="Deworming Drench">Deworming Drench</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Individual Animal (Optional)</label>
+                    <select name="animal_id" id="task-animal-select">
+                        <option value="">-- Group Activity --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target Group / Pen Name</label>
+                    <input type="text" name="target_group" placeholder="e.g. Weaner Litter #4, Calf Pen A">
+                </div>
+                <div class="form-group">
+                    <label>Scheduled Date *</label>
+                    <input type="date" name="scheduled_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select name="priority">
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group span-3">
+                    <label>Notes & Instructions</label>
+                    <input type="text" name="notes" placeholder="Equipment required, handler instructions">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Schedule Activity</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Upcoming, Overdue & Completed Management Tasks</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="tasks-table">
+                <thead>
+                    <tr>
+                        <th>Scheduled Date</th>
+                        <th>Activity</th>
+                        <th>Animal / Group</th>
+                        <th>Species</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Completion Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 6: NUTRITION AND FEEDING -->
+<section id="view-nutrition" class="view-section">
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Add or Restock Feed Inventory</h3>
+            </div>
+            <form id="form-feed-stock" onsubmit="AgriPulse.submitFeedStock(event)">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Feed Ingredient / Ration Name *</label>
+                        <input type="text" name="feed_name" required placeholder="e.g. High Yield Dairy Meal, Napier Silage">
+                    </div>
+                    <div class="form-group">
+                        <label>Feed Category</label>
+                        <select name="category">
+                            <option value="Concentrate">Concentrate</option>
+                            <option value="Roughage / Forage">Roughage / Forage</option>
+                            <option value="Mineral Supplement">Mineral Supplement</option>
+                            <option value="Protein Supplement">Protein Supplement</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity Added (kg) *</label>
+                        <input type="number" step="0.1" min="0.1" name="quantity_kg" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unit Cost per kg *</label>
+                        <input type="number" step="0.01" min="0" name="unit_cost_per_kg" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Dry Matter Content (DM %)</label>
+                        <input type="number" step="0.1" name="dry_matter_pct" value="88.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Crude Protein (% DM)</label>
+                        <input type="number" step="0.1" name="crude_protein_pct" value="16.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Metabolizable Energy (MJ/kg DM)</label>
+                        <input type="number" step="0.1" name="metabolizable_energy_mj" value="11.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Low Stock Alert Threshold (kg)</label>
+                        <input type="number" step="1" name="reorder_level_kg" value="50">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save to Feed Inventory</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Record Daily Feeding & Calculate Nutrient Intake</h3>
+            </div>
+            <form id="form-feeding-log" onsubmit="AgriPulse.submitFeedingLog(event)">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Select Feed from Store *</label>
+                        <select name="feed_id" id="feeding-feed-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Feeding Date *</label>
+                        <input type="date" name="feeding_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Specific Animal (Optional)</label>
+                        <select name="animal_id" id="feeding-animal-select">
+                            <option value="">-- Herd / Group Ration --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Group Name</label>
+                        <input type="text" name="target_group" placeholder="e.g. Lactating Paddock 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Animals Fed *</label>
+                        <input type="number" name="animal_count" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Quantity Fed (As-Fed kg) *</label>
+                        <input type="number" step="0.1" min="0.1" name="quantity_kg" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Deduct Stock & Compute DMI / CP / ME</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Feed Store Stock Levels & Nutritional Composition</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="feed-inventory-table">
+                <thead>
+                    <tr>
+                        <th>Feed Name</th>
+                        <th>Category</th>
+                        <th>Available Stock</th>
+                        <th>Reorder Threshold</th>
+                        <th>Unit Cost/kg</th>
+                        <th>DM %</th>
+                        <th>CP %</th>
+                        <th>Energy (MJ/kg DM)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Daily Feeding Records & Per-Animal Nutrient Intake</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="feeding-records-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Feed Item</th>
+                        <th>Target</th>
+                        <th>Head Count</th>
+                        <th>Total As-Fed</th>
+                        <th>DMI / Animal</th>
+                        <th>Crude Protein / Animal</th>
+                        <th>Energy / Animal</th>
+                        <th>Total Cost</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 7: PRODUCTION MANAGEMENT -->
+<section id="view-production" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Record Dairy Milk, Poultry Eggs, or Meat Production</h3>
+        </div>
+        <form id="form-production" onsubmit="AgriPulse.submitProduction(event)">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Production Enterprise *</label>
+                    <select name="production_type" required>
+                        <option value="Milk">Dairy Milk Yield (Liters)</option>
+                        <option value="Eggs">Poultry Egg Collection (Count)</option>
+                        <option value="Meat/Carcass">Meat / Slaughter Yield (kg)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Record Date *</label>
+                    <input type="date" name="record_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Individual Animal (Dairy / Meat)</label>
+                    <select name="animal_id" id="prod-animal-select">
+                        <option value="">-- Flock / Group Batch --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Flock / Group Identifier</label>
+                    <input type="text" name="flock_or_group" placeholder="e.g. Layer Flock House B">
+                </div>
+                <div class="form-group">
+                    <label>Morning Yield</label>
+                    <input type="number" step="0.1" min="0" name="morning_yield" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Evening Yield</label>
+                    <input type="number" step="0.1" min="0" name="evening_yield" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Total Yield (Auto-summed if AM/PM entered)</label>
+                    <input type="number" step="0.1" min="0" name="total_yield" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Active Hens in Flock (for Egg Laying %)</label>
+                    <input type="number" min="1" name="flock_size" placeholder="e.g. 300">
+                </div>
+                <div class="form-group">
+                    <label>Live Slaughter Weight (kg)</label>
+                    <input type="number" step="0.1" min="0" name="live_slaughter_weight" placeholder="For dressing %">
+                </div>
+                <div class="form-group">
+                    <label>Cold Carcass Weight (kg)</label>
+                    <input type="number" step="0.1" min="0" name="carcass_weight" placeholder="For dressing %">
+                </div>
+                <div class="form-group span-2">
+                    <label>Quality Observations</label>
+                    <input type="text" name="quality_notes" placeholder="Milk density, California Mastitis Test, egg shell grade">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Production Record</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Enterprise Production Log & Efficiency Indicators</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="production-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Animal / Flock</th>
+                        <th>Enterprise</th>
+                        <th>Morning</th>
+                        <th>Evening</th>
+                        <th>Total Yield</th>
+                        <th>Calculated Metric</th>
+                        <th>Quality Notes</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 8: GROWTH AND WEIGHT MONITORING -->
+<section id="view-growth" class="view-section">
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Record Periodic Animal Weighing</h3>
+            </div>
+            <form id="form-weight" onsubmit="AgriPulse.submitWeight(event)">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Select Animal *</label>
+                        <select name="animal_id" id="weight-animal-select" required onchange="AgriPulse.loadGrowthChart(this.value)"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Measurement Date *</label>
+                        <input type="date" name="measurement_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Measured Weight (kg) *</label>
+                        <input type="number" step="0.1" min="0.1" name="weight_kg" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Body Condition Score (1.0 - 5.0)</label>
+                        <input type="number" step="0.25" min="1.0" max="5.0" name="body_condition_score" placeholder="3.0">
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Growth Notes</label>
+                        <input type="text" name="notes" placeholder="Weaning weight, 90-day check, finisher phase">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Weight & Compute ADG</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Animal Weight Progression Curve</h3>
+            </div>
+            <canvas id="chart-growth" width="480" height="220"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Weight Gain & Average Daily Gain (ADG) History</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="weights-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Animal Tag</th>
+                        <th>Previous Weight</th>
+                        <th>Current Weight</th>
+                        <th>Weight Change</th>
+                        <th>ADG (kg/day)</th>
+                        <th>BCS</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 9: FARM CALENDAR -->
+<section id="view-calendar" class="view-section">
+    <div class="card">
+        <div class="card-header filter-bar">
+            <h3 id="calendar-month-label">Interactive Farm Management Calendar</h3>
+            <div class="filter-controls">
+                <button class="btn btn-outline" onclick="AgriPulse.changeCalendarMonth(-1)">&larr; Previous Month</button>
+                <button class="btn btn-outline" onclick="AgriPulse.changeCalendarMonth(0)">Current Month</button>
+                <button class="btn btn-outline" onclick="AgriPulse.changeCalendarMonth(1)">Next Month &rarr;</button>
+            </div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+    </div>
+</section>
+
+<!-- MODULE 10: NOTIFICATIONS AND ALERTS -->
+<section id="view-notifications" class="view-section">
+    <div class="card">
+        <div class="card-header filter-bar">
+            <h3>Automated Farm Reminders & Biosecurity Alerts</h3>
+            <label>
+                <input type="checkbox" id="toggle-resolved-alerts" onchange="AgriPulse.loadNotifications()">
+                Include Resolved Alerts
+            </label>
+        </div>
+        <div id="notifications-full-list" class="list-stack"></div>
+    </div>
+</section>
+
+<!-- MODULE 11: FARM FINANCIAL MANAGEMENT -->
+<section id="view-finance" class="view-section">
+    <div class="kpi-grid" id="finance-kpis"></div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Record Farm Income or Expenditure</h3>
+        </div>
+        <form id="form-finance" onsubmit="AgriPulse.submitFinance(event)">
+            <div class="form-grid-4">
+                <div class="form-group">
+                    <label>Transaction Date *</label>
+                    <input type="date" name="transaction_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Transaction Type *</label>
+                    <select name="transaction_type" required>
+                        <option value="Income">Income / Revenue</option>
+                        <option value="Expense">Expenditure / Cost</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select name="category" required>
+                        <option value="Milk Sales">Milk Sales</option>
+                        <option value="Egg Sales">Egg Sales</option>
+                        <option value="Animal Sales">Animal Sales</option>
+                        <option value="Other Livestock Income">Other Livestock Income</option>
+                        <option value="Feed Expenditure">Feed Expenditure</option>
+                        <option value="Veterinary & Medication">Veterinary & Medication</option>
+                        <option value="Breeding Expenditure">Breeding Expenditure</option>
+                        <option value="Labour Expenditure">Labour Expenditure</option>
+                        <option value="Animal Purchases">Animal Purchases</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Production Enterprise</label>
+                    <select name="enterprise">
+                        <option value="Dairy">Dairy</option>
+                        <option value="Poultry">Poultry</option>
+                        <option value="Meat">Meat</option>
+                        <option value="Breeding">Breeding</option>
+                        <option value="General Farm">General Farm</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount *</label>
+                    <input type="number" step="0.01" min="0.01" name="amount" required>
+                </div>
+                <div class="form-group">
+                    <label>Associated Animal Tag</label>
+                    <input type="text" name="animal_tag" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Payment / Receipt Reference</label>
+                    <input type="text" name="payment_reference" placeholder="e.g. M-PESA Code / Invoice #">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Details of transaction">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Financial Transaction</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Farm Financial Ledger</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="finance-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Enterprise</th>
+                        <th>Animal Tag</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- MODULE 12: REPORTS AND EXPORTS -->
+<section id="view-reports" class="view-section">
+    <div class="card">
+        <div class="card-header">
+            <h3>Generate Printable PDF & CSV Farm Reports</h3>
+        </div>
+        <div class="form-grid-4">
+            <div class="form-group">
+                <label>Select Report Type</label>
+                <select id="report-type">
+                    <option value="animal_inventory">Livestock Inventory & Registration Report</option>
+                    <option value="breeding">Breeding & Reproductive Performance Report</option>
+                    <option value="health">Veterinary Health & Vaccination Report</option>
+                    <option value="feeding">Nutrition & Feed Consumption Report</option>
+                    <option value="production">Farm Production Summary Report</option>
+                    <option value="growth">Weight & Growth Performance Report</option>
+                    <option value="tasks">Routine Management & Overdue Activities Report</option>
+                    <option value="finance">Financial Income & Expenditure Report</option>
+                    <option value="alerts">Active Farm Alerts Report</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Start Date Filter</label>
+                <input type="date" id="report-start">
+            </div>
+            <div class="form-group">
+                <label>End Date Filter</label>
+                <input type="date" id="report-end">
+            </div>
+            <div class="form-group">
+                <label>Export Format</label>
+                <div style="display:flex; gap:8px; margin-top:4px;">
+                    <button class="btn btn-primary" onclick="AgriPulse.exportReport('csv')">Download CSV</button>
+                    <button class="btn btn-outline" onclick="AgriPulse.exportReport('pdf')">Print / Save PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SETTINGS, SPECIES PARAMETERS & BACKUP -->
+<section id="view-settings" class="view-section">
+    <div class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <h3>Farm Profile & Operational Settings</h3>
+            </div>
+            <form id="form-settings" onsubmit="AgriPulse.submitSettings(event)">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Farm Name</label>
+                        <input type="text" name="farm_name" id="set-farm-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Farm Location</label>
+                        <input type="text" name="location" id="set-location">
+                    </div>
+                    <div class="form-group">
+                        <label>Farmer / Manager Name</label>
+                        <input type="text" name="owner_name" id="set-owner">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Currency</label>
+                        <input type="text" name="currency" id="set-currency" value="KES">
+                    </div>
+                    <div class="form-group">
+                        <label>Advance Alert Notification Horizon (Days)</label>
+                        <input type="number" name="lead_alert_days" id="set-lead-days" value="7" min="1" max="60">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Farm Settings</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>SQLite Database Backup & Restoration</h3>
+            </div>
+            <p style="margin-bottom:12px; color:#475569;">
+                Create an instant offline backup of your entire farm database or restore from a saved snapshot.
+            </p>
+            <button class="btn btn-primary" onclick="AgriPulse.TriggerBackup()">Create Instant Backup Now</button>
+            <div id="backup-list" class="list-stack" style="margin-top:14px;"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Configurable Species Reproductive & Nutritional Parameters</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table" id="species-config-table">
+                <thead>
+                    <tr>
+                        <th>Species</th>
+                        <th>Gestation (Days)</th>
+                        <th>Estrous Cycle (Days)</th>
+                        <th>Preg Check (Days)</th>
+                        <th>Weaning (Days)</th>
+                        <th>Target DMI (% BW)</th>
+                        <th>Default System</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

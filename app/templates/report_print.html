@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }} — AgriPulse</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #1f2937; margin: 28px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 3px solid #14532d; padding-bottom: 12px; margin-bottom: 20px; }
+        h1 { margin: 0; color: #14532d; font-size: 22px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
+        th { background-color: #f3f4f6; color: #111827; font-weight: 700; }
+        .no-print { margin-bottom: 16px; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()" style="padding:8px 16px; background:#14532d; color:#fff; border:none; border-radius:4px; cursor:pointer;">Print / Save as PDF</button>
+        <button onclick="window.close()" style="padding:8px 16px; margin-left:8px; cursor:pointer;">Close Window</button>
+    </div>
+    <div class="header">
+        <div>
+            <h1>{{ settings.farm_name if settings else 'AgriPulse Livestock Enterprise' }}</h1>
+            <div>{{ settings.location if settings else '' }}</div>
+            <strong>{{ title }}</strong>
+        </div>
+        <div style="text-align:right; font-size:12px;">
+            <div>Generated: {{ generated_on }}</div>
+            <div>Currency: {{ settings.currency if settings else 'KES' }}</div>
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% else %}
+            <tr><td colspan="{{ headers|length }}" style="text-align:center;">No records found for the selected filter criteria.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
