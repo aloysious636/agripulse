@@ -234,7 +234,12 @@ def handle_animals():
     if not dob or dob > date.today():
         return jsonify({'error': 'Valid Date of Birth (not in the future) is required.'}), 400
 
-    species_id = int(data.get('species_id'))
+    raw_species_id = data.get('species_id')
+    if not raw_species_id:
+        return jsonify({'error': 'Species is required.'}), 400
+    species_id = int(raw_species_id)
+    if not db.session.get(Species, species_id):
+        return jsonify({'error': 'Selected species does not exist.'}), 400
     birth_wt = float(data['birth_weight']) if data.get('birth_weight') not in (None, '') else None
     curr_wt = float(data['current_weight']) if data.get('current_weight') not in (None, '') else birth_wt
 
@@ -298,9 +303,15 @@ def handle_single_animal(animal_id):
         profile['health_records'] = [h.to_dict() for h in animal.health_records]
         profile['routine_tasks'] = [t.to_dict() for t in animal.routine_tasks]
         profile['production_records'] = [p.to_dict() for p in animal.production_records]
-        profile['weight_records'] = [w.to_dict() for w in sorted(animal.weight_records, key=lambda x: x.measurement_date)]
+        all_weights = sorted(animal.weight_records, key=lambda x: x.measurement_date)
+        profile['weight_records'] = [w.to_dict() for w in all_weights]
         feeding = FeedingRecord.query.filter_by(animal_id=animal.id).order_by(FeedingRecord.feeding_date.desc()).all()
         profile['feeding_records'] = [f.to_dict() for f in feeding]
+        total_feed_kg = db.session.query(func.sum(FeedingRecord.quantity_kg)).filter(FeedingRecord.animal_id == animal.id).scalar() or 0.0
+        total_gain = 0.0
+        if len(all_weights) >= 2:
+            total_gain = all_weights[-1].weight_kg - all_weights[0].weight_kg
+        profile['fcr'] = CalculationEngine.calculate_fcr(total_feed_kg, total_gain)
         return jsonify(profile)
 
     if request.method == 'PUT':
@@ -360,6 +371,9 @@ def handle_breeding():
     animal = db.session.get(Animal, animal_id)
     if not animal:
         return jsonify({'error': 'Valid female animal is required.'}), 400
+
+    if animal.sex not in ('Female',):
+        return jsonify({'error': f'Breeding records can only be created for female animals. {animal.tag_number} is listed as {animal.sex}.'}), 400
 
     sp = animal.species_ref
     heat_date = parse_date(data.get('heat_date'))
@@ -905,13 +919,13 @@ def restore_backup():
         temp_path = Path(current_app.config['BACKUP_FOLDER']) / 'restore_upload_temp.db'
         f.save(temp_path)
         BackupService.restore_backup(temp_path)
-        return jsonify({'message': 'Database successfully restored from uploaded file.'})
+        return jsonify({'message': 'Database successfully restored from uploaded file.', 'reload_required': True})
 
     data = request.json or {}
     filename = data.get('filename')
     if filename:
         path = Path(current_app.config['BACKUP_FOLDER']) / secure_filename(filename)
         BackupService.restore_backup(path)
-        return jsonify({'message': f'Database restored from {filename}.'})
+        return jsonify({'message': f'Database restored from {filename}.', 'reload_required': True})
 
     return jsonify({'error': 'No backup file provided.'}), 400

@@ -56,4 +56,5 @@ class BackupService:
         db.session.remove()
         db.engine.dispose()
         shutil.copy2(source_path, db_path)
+        db.engine.dispose()
         return True

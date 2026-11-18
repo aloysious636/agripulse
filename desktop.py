@@ -1,4 +1,4 @@
-import socket
+﻿import socket
 import threading
 import time
 import sys
@@ -31,7 +31,7 @@ def main():
     time.sleep(0.3)
 
     webview.create_window(
-        title='AgriPulse — Smarter Livestock Management',
+        title='AgriPulse -- Smarter Livestock Management',
         url=f'http://127.0.0.1:{port}',
         width=1366,
         height=840,

@@ -1001,6 +1001,20 @@
                         <label>Advance Alert Notification Horizon (Days)</label>
                         <input type="number" name="lead_alert_days" id="set-lead-days" value="7" min="1" max="60">
                     </div>
+                    <div class="form-group">
+                        <label>Weight Unit</label>
+                        <select name="weight_unit" id="set-weight-unit">
+                            <option value="kg">Kilograms (kg)</option>
+                            <option value="lb">Pounds (lb)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Milk / Liquid Unit</label>
+                        <select name="milk_unit" id="set-milk-unit">
+                            <option value="Liters">Liters (L)</option>
+                            <option value="Gallons">Gallons (gal)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save Farm Settings</button>
@@ -1015,7 +1029,7 @@
             <p style="margin-bottom:12px; color:#475569;">
                 Create an instant offline backup of your entire farm database or restore from a saved snapshot.
             </p>
-            <button class="btn btn-primary" onclick="AgriPulse.TriggerBackup()">Create Instant Backup Now</button>
+            <button class="btn btn-primary" onclick="AgriPulse.triggerBackup()">Create Instant Backup Now</button>
             <div id="backup-list" class="list-stack" style="margin-top:14px;"></div>
         </div>
     </div>

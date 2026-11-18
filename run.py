@@ -1,4 +1,4 @@
-import socket
+﻿import socket
 import threading
 import time
 import webbrowser
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     local_ip = get_local_ip()
 
     print("=" * 62)
-    print("  AGRIPULSE — SMARTER LIVESTOCK MANAGEMENT")
+    print("  AGRIPULSE -- SMARTER LIVESTOCK MANAGEMENT")
     print("=" * 62)
     print(f"  * Laptop Browser URL : http://127.0.0.1:{PORT}")
     print(f"  * Phone Browser URL  : http://{local_ip}:{PORT} (Same Wi-Fi/Hotspot)")

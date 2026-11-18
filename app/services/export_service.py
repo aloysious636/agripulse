@@ -113,7 +113,8 @@ class ExportService:
             q = RoutineTask.query.order_by(RoutineTask.scheduled_date.asc()).all()
             headers = ['Scheduled Date', 'Activity', 'Animal/Group', 'Species', 'Priority', 'Status', 'Completed Date']
             data = [[
-                r.scheduled_date.isoformat(), r.activity_name,
+                r.scheduled_date.isoformat() if r.scheduled_date else '-',
+                r.activity_name,
                 r.animal.tag_number if r.animal else (r.target_group or 'Group'),
                 r.species_name, r.priority, r.status,
                 r.completion_date.isoformat() if r.completion_date else '-'

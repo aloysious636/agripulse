@@ -1,8 +1,10 @@
-const AgriPulse = {
+﻿const AgriPulse = {
     speciesList: [],
     animalsList: [],
     calendarCursor: new Date(),
     currency: 'KES',
+    weightUnit: 'kg',
+    milkUnit: 'Liters',
 
     vaccinationSchedules: {
         "Poultry": [
@@ -82,10 +84,15 @@ const AgriPulse = {
     },
 
     async api(url, options = {}) {
-        const res = await fetch(url, options);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Operation failed');
-        return data;
+        try {
+            const res = await fetch(url, options);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Server error (${res.status})`);
+            return data;
+        } catch (err) {
+            if (err.name === 'TypeError') throw new Error('Network error — check your connection.');
+            throw err;
+        }
     },
 
     async refreshAll() {
@@ -117,6 +124,12 @@ const AgriPulse = {
         ]);
         this.speciesList = species;
         this.currency = settings.currency || 'KES';
+        this.weightUnit = settings.weight_unit || 'kg';
+        this.milkUnit = settings.milk_unit || 'Liters';
+        const wuEl = document.getElementById('set-weight-unit');
+        const muEl = document.getElementById('set-milk-unit');
+        if (wuEl) wuEl.value = this.weightUnit;
+        if (muEl) muEl.value = this.milkUnit;
         document.getElementById('currency-badge').textContent = this.currency;
         document.getElementById('sidebar-farm-name').textContent = settings.farm_name || 'AgriPulse';
 
@@ -176,7 +189,7 @@ const AgriPulse = {
             ['Expected Births', k.expected_births],
             ['Upcoming Tasks', k.upcoming_tasks],
             ['Overdue Tasks', k.overdue_tasks],
-            ['30d Milk (L)', k.milk_30d],
+            ['30d Milk (' + this.milkUnit + ')', k.milk_30d],
             ['30d Eggs', k.eggs_30d],
             [`Net Balance (${this.currency})`, k.net_balance.toLocaleString()]
         ];
@@ -213,10 +226,12 @@ const AgriPulse = {
         const sp = document.getElementById('filter-animal-species').value;
         const st = document.getElementById('filter-animal-status').value;
 
+        const tbody = document.querySelector('#animals-table tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#64748b;">Loading...</td></tr>';
+
         const animals = await this.api(`/api/animals?search=${encodeURIComponent(search)}&species_id=${sp}&status=${st}`);
         this.animalsList = animals;
 
-        const tbody = document.querySelector('#animals-table tbody');
         tbody.innerHTML = animals.map(a => `
             <tr>
                 <td><strong>${a.tag_number}</strong></td>
@@ -225,7 +240,7 @@ const AgriPulse = {
                 <td>${a.breed}</td>
                 <td>${a.sex}</td>
                 <td>${a.age_info.display}</td>
-                <td>${a.current_weight ? a.current_weight + ' kg' : '-'}</td>
+                <td>${a.current_weight ? a.current_weight + ' ' + this.weightUnit : '-'}</td>
                 <td>${a.production_category}</td>
                 <td><span class="${a.status === 'Active' ? 'tag-emerald' : 'tag-amber'}">${a.status}</span></td>
                 <td>
@@ -284,7 +299,7 @@ const AgriPulse = {
                     <p><strong>Sex:</strong> ${p.sex} | <strong>Age:</strong> ${p.age_info.display} (DOB: ${p.dob})</p>
                     <p><strong>Category:</strong> ${p.production_category} | <strong>Status:</strong> ${p.status}</p>
                     <p><strong>Lineage:</strong> Dam: ${p.dam_tag || 'N/A'} | Sire: ${p.sire_tag || 'N/A'}</p>
-                    <p><strong>Weights:</strong> Birth: ${p.birth_weight || '-'} kg | Current: ${p.current_weight || '-'} kg</p>
+                    <p><strong>Weights:</strong> Birth: ${p.birth_weight || '-'} ${this.weightUnit} | Current: ${p.current_weight || '-'} ${this.weightUnit}</p>
                 </div>
                 <div>
                     ${p.photo_path ? `<img src="${p.photo_path}" style="max-height:110px; border-radius:6px;">` : ''}
@@ -295,12 +310,33 @@ const AgriPulse = {
             <p style="font-size:12px; margin-bottom:10px;">${p.breedings.map(b => `Service: ${b.service_date} (${b.pregnancy_status}) → Expected: ${b.expected_delivery_date || '-'}`).join('<br>') || 'No breeding records.'}</p>
             <h4>Veterinary & Health History (${p.health_records.length})</h4>
             <p style="font-size:12px; margin-bottom:10px;">${p.health_records.map(h => `${h.event_date}: [${h.record_type}] ${h.disease_or_condition} - ${h.medication}`).join('<br>') || 'No health records.'}</p>
-            <h4>Growth & Weight Records (${p.weight_records.length})</h4>
-            <p style="font-size:12px;">${p.weight_records.map(w => `${w.measurement_date}: ${w.weight_kg} kg (ADG: ${w.adg_kg_per_day ?? '-'} kg/d)`).join(' → ') || 'No weight logs.'}</p>
+            <h4>Growth &amp; Weight Records (${p.weight_records.length})</h4>
+            <p style="font-size:12px;">${p.weight_records.map(w => ` ${w.measurement_date}: ${w.weight_kg} ` + this.weightUnit + ` (ADG: ${w.adg_kg_per_day ?? '-'} ` + this.weightUnit + `/d) `).join(' → ') || 'No weight logs.'}</p>
+            <h4>Feed Conversion Ratio (FCR)</h4>
+            <p style="font-size:12px; margin-bottom:10px;">
+                ${p.fcr !== null && p.fcr !== undefined ? '<strong>FCR: ' + p.fcr + '</strong> ' + this.weightUnit + ' feed per ' + this.weightUnit + ' gain' : 'Insufficient data (needs &ge;2 weight records + feeding records)'}
+            </p>
+            <details style="margin-top:16px; border:1px solid #fca5a5; border-radius:6px; padding:12px;">
+                <summary style="color:#dc2626; font-weight:600; cursor:pointer;">&#x26A0; Danger Zone</summary>
+                <p style="font-size:12px; margin:8px 0; color:#475569;">Permanently removes all records for this animal. This cannot be undone.</p>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" onclick="AgriPulse.hardDeleteAnimal(${p.id}, '${p.tag_number}')">Permanently Delete Animal</button>
+            </details>
         `;
         document.getElementById('animal-profile-modal').classList.remove('hidden');
     },
 
+    async hardDeleteAnimal(id, tag) {
+        const first = confirm(`Delete ${tag} permanently? This removes ALL records for this animal.`);
+        if (!first) return;
+        const second = confirm(`FINAL CONFIRMATION: Permanently delete ${tag}? This cannot be undone.`);
+        if (!second) return;
+        try {
+            await this.api(`/api/animals/${id}?mode=hard`, { method: 'DELETE' });
+            this.closeModal('animal-profile-modal');
+            this.toast(`Animal ${tag} permanently deleted.`);
+            await this.refreshAll();
+        } catch (err) { this.toast(err.message, true); }
+    },
     closeModal(id) { document.getElementById(id).classList.add('hidden'); },
 
     async loadBreeding() {
@@ -536,15 +572,15 @@ const AgriPulse = {
         ]);
 
         document.getElementById('feeding-feed-select').innerHTML = feeds.map(f =>
-            `<option value="${f.id}">${f.feed_name} (${f.quantity_kg} kg avail)</option>`
+            `<option value="${f.id}">${f.feed_name} (${f.quantity_kg} ${this.weightUnit} avail)</option>`
         ).join('');
 
         document.querySelector('#feed-inventory-table tbody').innerHTML = feeds.map(f => `
             <tr>
                 <td><strong>${f.feed_name}</strong></td>
                 <td>${f.category}</td>
-                <td><span class="${f.quantity_kg <= f.reorder_level_kg ? 'tag-red' : 'tag-emerald'}">${f.quantity_kg} kg</span></td>
-                <td>${f.reorder_level_kg} kg</td>
+                <td><span class="${f.quantity_kg <= f.reorder_level_kg ? 'tag-red' : 'tag-emerald'}">${f.quantity_kg} ${this.weightUnit}</span></td>
+                <td>${f.reorder_level_kg} ${this.weightUnit}</td>
                 <td>${this.currency} ${f.unit_cost_per_kg}</td>
                 <td>${f.dry_matter_pct}%</td>
                 <td>${f.crude_protein_pct}%</td>
@@ -558,8 +594,8 @@ const AgriPulse = {
                 <td>${l.feed_name}</td>
                 <td>${l.target}</td>
                 <td>${l.animal_count}</td>
-                <td>${l.quantity_kg} kg</td>
-                <td>${l.nutrition ? l.nutrition.dm_per_head_kg + ' kg' : '-'}</td>
+                <td>${l.quantity_kg} ${this.weightUnit}</td>
+                <td>${l.nutrition ? l.nutrition.dm_per_head_kg + ' ' + this.weightUnit : '-'}</td>
                 <td>${l.nutrition ? l.nutrition.cp_per_head_g + ' g' : '-'}</td>
                 <td>${l.nutrition ? l.nutrition.me_per_head_mj + ' MJ' : '-'}</td>
                 <td>${this.currency} ${l.total_cost.toLocaleString()}</td>
@@ -641,10 +677,10 @@ const AgriPulse = {
             <tr>
                 <td>${w.measurement_date}</td>
                 <td><strong>${w.tag_number}</strong></td>
-                <td>${w.previous_weight_kg !== null ? w.previous_weight_kg + ' kg' : '-'}</td>
-                <td><strong>${w.weight_kg} kg</strong></td>
-                <td>${w.weight_change_kg !== null ? (w.weight_change_kg >= 0 ? '+' : '') + w.weight_change_kg + ' kg' : '-'}</td>
-                <td><span class="${w.adg_kg_per_day !== null && w.adg_kg_per_day < 0 ? 'tag-red' : 'tag-emerald'}">${w.adg_kg_per_day !== null ? w.adg_kg_per_day + ' kg/d' : '-'}</span></td>
+                <td>${w.previous_weight_kg !== null ? w.previous_weight_kg + ' ' + this.weightUnit : '-'}</td>
+                <td><strong>${w.weight_kg} ${this.weightUnit}</strong></td>
+                <td>${w.weight_change_kg !== null ? (w.weight_change_kg >= 0 ? '+' : '') + w.weight_change_kg + ' ' + this.weightUnit : '-'}</td>
+                <td><span class="${w.adg_kg_per_day !== null && w.adg_kg_per_day < 0 ? 'tag-red' : 'tag-emerald'}">${w.adg_kg_per_day !== null ? w.adg_kg_per_day + ' ' + this.weightUnit + '/d' : '-'}</span></td>
                 <td>${w.body_condition_score || '-'}</td>
                 <td>${w.notes || '-'}</td>
             </tr>
@@ -672,6 +708,8 @@ const AgriPulse = {
                 body: JSON.stringify(payload)
             });
             this.toast('Weight recorded and ADG calculated');
+            e.target.reset();
+            this.setDefaultDates();
             await this.refreshAll();
         } catch (err) { this.toast(err.message, true); }
     },
@@ -813,7 +851,7 @@ const AgriPulse = {
         `).join('') || '<p style="font-size:12px; color:#64748b;">No backups created yet.</p>';
     },
 
-    async TriggerBackup() {
+    async triggerBackup() {
         await this.api('/api/backup', { method: 'POST' });
         this.toast('Database backup created successfully');
         await this.loadBackups();
@@ -826,8 +864,12 @@ const AgriPulse = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ filename })
         });
-        this.toast('Database restored successfully');
-        await this.refreshAll();
+        this.toast('Database restored. Reloading in 3 seconds...');
+        let count = 3;
+        const interval = setInterval(() => {
+            count--;
+            if (count <= 0) { clearInterval(interval); location.reload(); }
+        }, 1000);
     },
 
     drawBarChart(canvasId, dataObj, color) {

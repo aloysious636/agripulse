@@ -127,7 +127,7 @@ class NotificationService:
             if f.quantity_kg <= f.reorder_level_kg:
                 sev = "Critical" if f.quantity_kg <= (f.reorder_level_kg * 0.25) else "High Priority"
                 append_alert(
-                    f"low_feed_{f.id}_{int(f.quantity_kg)}", sev, "Nutrition",
+                    f"low_feed_{f.id}", sev, "Nutrition",
                     f"Low Feed Stock: {f.feed_name}",
                     f"Remaining stock is {round(f.quantity_kg, 1)} kg (Reorder threshold: {f.reorder_level_kg} kg).",
                     today, ''

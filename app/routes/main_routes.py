@@ -22,8 +22,11 @@ def export_report():
     end_str = request.args.get('end_date')
     species_id = request.args.get('species_id', type=int)
 
-    start_date = datetime.strptime(start_str, '%Y-%m-%d').date() if start_str else None
-    end_date = datetime.strptime(end_str, '%Y-%m-%d').date() if end_str else None
+    try:
+        start_date = datetime.strptime(start_str, '%Y-%m-%d').date() if start_str else None
+        end_date = datetime.strptime(end_str, '%Y-%m-%d').date() if end_str else None
+    except ValueError:
+        return Response("Invalid date format. Use YYYY-MM-DD.", status=400)
 
     title, headers, rows = ExportService.fetch_report_data(report_type, start_date, end_date, species_id)
     settings = FarmSettings.query.first()
